@@ -1,59 +1,87 @@
 package com.example.projectthree
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONArray
+import org.json.JSONObject
+import androidx.navigation.fragment.findNavController
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [BreedSelector.newInstance] factory method to
- * create an instance of this fragment.
- */
+
+
+
 class BreedSelector : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var catSpinner: Spinner
+    private var breedList = mutableListOf<JSONObject>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_breed_selector, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_breed_selector, container, false)
+        catSpinner = view.findViewById(R.id.catSpinner)
+        fetchCatBreeds()
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment BreedSelector.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            BreedSelector().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        catSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                if (position >= 0 && position < breedList.size) {
+                    val breed = breedList[position]
+                    navigateToBreedDetails(breed)
                 }
             }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+        return view
+    }
+
+    private fun navigateToBreedDetails(breed: JSONObject) {
+        val bundle = Bundle().apply {
+            putString("name", breed.getString("name"))
+            putString("description", breed.getString("description"))
+            putString("origin", breed.getString("origin"))
+            putString("temperament", breed.getString("temperament"))
+        }
+        findNavController().navigate(R.id.action_breedSelector_to_breedDetails, bundle) // Ensure this ID matches your navigation graph
+    }
+
+    private fun fetchCatBreeds() {
+        val catURL = "https://api.thecatapi.com/v1/breeds" + "?api_key=live_Zgt4g7I1nVR1vZGaKgM3PQoa5CzhigPmAULsek27alt7EfoOPbA6KNVl6PIjALpm"
+        val queue: RequestQueue = Volley.newRequestQueue(requireContext())
+
+        val stringRequest = StringRequest(Request.Method.GET, catURL,
+            Response.Listener<String> { response ->
+                breedList = parseCatBreeds(response)
+                val catNames = breedList.map { it.getString("name") }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, catNames)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                catSpinner.adapter = adapter
+            },
+            Response.ErrorListener { error ->
+                Log.e("BreedSelectorFragment", "Error fetching cat breeds: ${error.message}")
+            })
+
+        queue.add(stringRequest)
+    }
+
+    private fun parseCatBreeds(response: String): MutableList<JSONObject> {
+        val breeds = mutableListOf<JSONObject>()
+        val jsonArray = JSONArray(response)
+        for (i in 0 until jsonArray.length()) {
+            breeds.add(jsonArray.getJSONObject(i))
+        }
+        return breeds
     }
 }

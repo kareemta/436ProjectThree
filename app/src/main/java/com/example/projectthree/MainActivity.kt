@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnGetCatData.setOnClickListener { printCatData() }
+       // binding.btnGetCatData.setOnClickListener { printCatData() }
 
         //setSupportActionBar(binding.toolbar)
 
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     fun printCatData() {
         var catURL =
-            "https://api.thecatapi.com/v1/breeds" + "?api_key=live_Zgt4g7I1nVR1vZGaKgM3PQoa5CzhigPmAULsek27alt7EfoOPbA6KNVl6PIjALpm"
+            "https://api.thecatapi.com/v1/breeds" + "?api_key=live_i2Acp03KkwXNDBZW6mznEQDcQz96BP61s991dCiQmFOPq5FSbvJ3f7EyX2MKu3q8"
 
         val queue = Volley.newRequestQueue(this)
 
