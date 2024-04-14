@@ -15,11 +15,8 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
-import androidx.navigation.fragment.findNavController
-
-
-
 
 
 class BreedSelector : Fragment() {
@@ -39,32 +36,41 @@ class BreedSelector : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 if (position >= 0 && position < breedList.size) {
                     val breed = breedList[position]
-                    navigateToBreedDetails(breed)
+                    showBreedDetails(breed)
                 }
             }
+
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
         return view
     }
 
-    private fun navigateToBreedDetails(breed: JSONObject) {
-        val bundle = Bundle().apply {
-            putString("name", breed.getString("name"))
-            putString("description", breed.getString("description"))
-            putString("origin", breed.getString("origin"))
-            putString("temperament", breed.getString("temperament"))
+    private fun showBreedDetails(breed: JSONObject) {
+        // Create an instance of the BreedDetails fragment and set arguments
+        val breedDetails = BreedDetails().apply {
+            arguments = Bundle().apply {
+                putString("name", breed.optString("name"))
+                putString("description", breed.optString("description"))
+                putString("origin", breed.optString("origin"))
+                putString("temperament", breed.optString("temperament"))
+            }
         }
-        findNavController().navigate(R.id.action_breedSelector_to_breedDetails, bundle) // Ensure this ID matches your navigation graph
+
+        // Perform the fragment transaction to replace the current fragment with the BreedDetailsFragment
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainerView9, breedDetails)
+            .addToBackStack(null) // Add transaction to the back stack (optional)
+            .commit()
     }
 
     private fun fetchCatBreeds() {
-        val catURL = "https://api.thecatapi.com/v1/breeds" + "?api_key=live_Zgt4g7I1nVR1vZGaKgM3PQoa5CzhigPmAULsek27alt7EfoOPbA6KNVl6PIjALpm"
+        val catURL = "https://api.thecatapi.com/v1/breeds" + "?api_key=live_i2Acp03KkwXNDBZW6mznEQDcQz96BP61s991dCiQmFOPq5FSbvJ3f7EyX2MKu3q8"
         val queue: RequestQueue = Volley.newRequestQueue(requireContext())
 
         val stringRequest = StringRequest(Request.Method.GET, catURL,
             Response.Listener<String> { response ->
                 breedList = parseCatBreeds(response)
-                val catNames = breedList.map { it.getString("name") }
+                val catNames = breedList.map { it.optString("name") }
                 val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, catNames)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 catSpinner.adapter = adapter
@@ -78,10 +84,16 @@ class BreedSelector : Fragment() {
 
     private fun parseCatBreeds(response: String): MutableList<JSONObject> {
         val breeds = mutableListOf<JSONObject>()
-        val jsonArray = JSONArray(response)
-        for (i in 0 until jsonArray.length()) {
-            breeds.add(jsonArray.getJSONObject(i))
+        try {
+            val jsonArray = JSONArray(response)
+            for (i in 0 until jsonArray.length()) {
+                breeds.add(jsonArray.getJSONObject(i))
+            }
+        } catch (e: JSONException) {
+            Log.e("BreedSelectorFragment", "Error parsing JSON data: ${e.message}")
         }
         return breeds
     }
 }
+
+
