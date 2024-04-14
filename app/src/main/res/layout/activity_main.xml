@@ -22,7 +22,7 @@
         tools:layout="@layout/fragment_breed_selector" />
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainerView9"
+        android:id="@+id/fragmentContainerView"
         android:name="com.example.projectthree.BreedDetails"
         android:layout_width="0dp"
         android:layout_height="0dp"

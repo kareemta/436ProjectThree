@@ -58,7 +58,7 @@ class BreedSelector : Fragment() {
 
         // Perform the fragment transaction to replace the current fragment with the BreedDetailsFragment
         parentFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainerView9, breedDetails)
+            .replace(R.id.fragmentContainerView, breedDetails)
             .addToBackStack(null) // Add transaction to the back stack (optional)
             .commit()
     }
