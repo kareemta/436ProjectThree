@@ -46,20 +46,19 @@ class BreedSelector : Fragment() {
     }
 
     private fun showBreedDetails(breed: JSONObject) {
-        // Create an instance of the BreedDetails fragment and set arguments
         val breedDetails = BreedDetails().apply {
             arguments = Bundle().apply {
                 putString("name", breed.optString("name"))
                 putString("description", breed.optString("description"))
                 putString("origin", breed.optString("origin"))
                 putString("temperament", breed.optString("temperament"))
+                putString("image_url", breed.optJSONObject("image")?.optString("url"))
             }
         }
 
-        // Perform the fragment transaction to replace the current fragment with the BreedDetailsFragment
         parentFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainerView9, breedDetails)
-            .addToBackStack(null) // Add transaction to the back stack (optional)
+            .replace(R.id.fragmentContainerView, breedDetails)
+            .addToBackStack(null)
             .commit()
     }
 
@@ -68,14 +67,14 @@ class BreedSelector : Fragment() {
         val queue: RequestQueue = Volley.newRequestQueue(requireContext())
 
         val stringRequest = StringRequest(Request.Method.GET, catURL,
-            Response.Listener<String> { response ->
+            { response ->
                 breedList = parseCatBreeds(response)
                 val catNames = breedList.map { it.optString("name") }
                 val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, catNames)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 catSpinner.adapter = adapter
             },
-            Response.ErrorListener { error ->
+            { error ->
                 Log.e("BreedSelectorFragment", "Error fetching cat breeds: ${error.message}")
             })
 
